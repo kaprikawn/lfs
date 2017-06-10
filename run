@@ -1,0 +1,1 @@
+sh ch5 > consoleoutput.txt 2>&1

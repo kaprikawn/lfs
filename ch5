@@ -38,6 +38,8 @@ function extract() {
   
   if [ $extension == "bz2" ]; then
     tar -xjf $archive
+  elif [ $extension == "xz" ]; then
+    tar -xJf $archive
   fi
   
   if [ ! -d $directory ]; then
@@ -121,7 +123,149 @@ function BinutilsPass1() {
   rm -rf $LFS/sources/$program
 }
 
-BinutilsPass1
+function GCCPass1() {
+  ver=6.3.0
+  archiveType=bz2
+  program=gcc-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gcc/gcc-$ver/$archive
+  section="5.5. GCC-6.3.0 - Pass 1"
+  
+  mpfrVer=3.1.5
+  gmpVer=6.1.2
+  mpcVer=1.0.3
+  
+  log "$section"
+  
+  download $url $archive
+  download http://www.mpfr.org/mpfr-$mpfrVer/mpfr-$mpfrVer.tar.xz mpfr-$mpfrVer.tar.xz
+  download http://ftp.gnu.org/gnu/gmp/gmp-$gmpVer.tar.xz gmp-$gmpVer.tar.xz
+  download http://www.multiprecision.org/mpc/download/mpc-$mpcVer.tar.gz mpc-$mpcVer.tar.gz
+  
+  extract $archive
+  
+  cd $LFS/sources/$program
+  
+  tar -xf ../mpfr-$mpfrVer.tar.xz
+  mv -v mpfr-$mpfrVer mpfr
+  tar -xf ../gmp-$gmpVer.tar.xz
+  mv -v gmp-$gmpVer gmp
+  tar -xf ../mpc-1.0.3.tar.gz
+  mv -v mpc-$mpcVer mpc
+  
+  for file in gcc/config/{linux,i386/linux{,64}}.h
+  do
+    cp -uv $file{,.orig}
+    sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&@g' \
+        -e 's@/usr@/tools@g' $file.orig > $file
+    echo '
+#undef STANDARD_STARTFILE_PREFIX_1
+#undef STANDARD_STARTFILE_PREFIX_2
+#define STANDARD_STARTFILE_PREFIX_1 "/tools/lib/"
+#define STANDARD_STARTFILE_PREFIX_2 ""' >> $file
+    touch $file.orig
+  done
+  
+  case $(uname -m) in
+    x86_64)
+      sed -e '/m64=/s/lib64/lib/' \
+          -i.orig gcc/config/i386/t-linux64
+   ;;
+  esac
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
 
+  log "starting configure"
+  ../configure                                       \
+    --target=$LFS_TGT                              \
+    --prefix=/tools                                \
+    --with-glibc-version=2.11                      \
+    --with-sysroot=$LFS                            \
+    --with-newlib                                  \
+    --without-headers                              \
+    --with-local-prefix=/tools                     \
+    --with-native-system-header-dir=/tools/include \
+    --disable-nls                                  \
+    --disable-shared                               \
+    --disable-multilib                             \
+    --disable-decimal-float                        \
+    --disable-threads                              \
+    --disable-libatomic                            \
+    --disable-libgomp                              \
+    --disable-libmpx                               \
+    --disable-libquadmath                          \
+    --disable-libssp                               \
+    --disable-libvtv                               \
+    --disable-libstdcxx                            \
+    --enable-languages=c,c++
+  checkRetVal $?
+  
+  callmake
+  
+  callmakeInstall
+
+  rm -rf $LFS/sources/$program
+}
+
+function LinuxApiHeaders() {
+  ver=4.9.9
+  archiveType=xz
+  program=linux-$ver
+  archive=$program.tar.$archiveType
+  url=https://www.kernel.org/pub/linux/kernel/v4.x/$archive
+  section="5.6. Linux-4.9.9 API Headers"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  
+  cd $program
+  checkRetVal $?
+  
+  make mrproper
+  checkRetVal $?
+  
+  make INSTALL_HDR_PATH=dest headers_install
+  checkRetVal $?
+  cp -rv dest/include/* /tools/include
+  checkRetVal $?
+  
+  
+}
+
+function Glibc() {
+  ver=2.25
+  archiveType=xz
+  program=linux-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/glibc/$archive
+  section="5.7. Glibc-2.25"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
+  
+  log "starting configure"
+  
+  
+  
+}
+
+#BinutilsPass1
+#GCCPass1
+LinuxApiHeaders
+Glibc
 
 exit 0
