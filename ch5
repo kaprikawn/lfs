@@ -69,7 +69,7 @@ function callmake() {
 
 function callmakeInstall() {
   log "calling make install"
-  make
+  make install
   if [ $? -eq 0 ]; then
     log "make install ran successfully"
   else
@@ -97,18 +97,19 @@ function BinutilsPass1() {
   extract $archive
 
   cd $program
-
+  
+  
   mkdir -v build
   cd build
   checkRetVal $?
 
   log "starting configure"
-  ../configure --prefix=/tools            \
-               --with-sysroot=$LFS        \
-               --with-lib-path=/tools/lib \
-               --target=$LFS_TGT          \
-               --disable-nls              \
-               --disable-werror
+  ../configure --prefix=/tools          \
+             --with-sysroot=$LFS        \
+             --with-lib-path=/tools/lib \
+             --target=$LFS_TGT          \
+             --disable-nls              \
+             --disable-werror
 
   checkRetVal $?
 
@@ -263,8 +264,8 @@ function Glibc() {
   
 }
 
-#BinutilsPass1
-#GCCPass1
+BinutilsPass1
+GCCPass1
 LinuxApiHeaders
 Glibc
 
