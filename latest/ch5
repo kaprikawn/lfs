@@ -17,6 +17,14 @@ function log() {
   echo $1 >> $logfile
 }
 
+function checkRetVal() {
+  if [ $1 -ne 0 ]; then
+    echo "checkRetVal failed"
+    log "checkRetVal failed"
+    exit 1
+  fi
+}
+
 function download() {
   cd $LFS/sources
   
@@ -24,6 +32,7 @@ function download() {
     echo "$2 already downloaded"
   else
     wget $1
+    checkRetVal $?
   fi
   
   if [ ! -e $2 ]; then
@@ -52,14 +61,6 @@ function extract() {
   
   if [ ! -d $directory ]; then
     echo $archive does not appear to have unpacked
-    exit 1
-  fi
-}
-
-function checkRetVal() {
-  if [ $1 -ne 0 ]; then
-    echo "checkRetVal failed"
-    log "checkRetVal failed"
     exit 1
   fi
 }
