@@ -1,12 +1,20 @@
 #!/bin/bash
 
 LFS=/mnt/lfs
-LFS_TGT=x86_64-lfs-linux-gnu
-logfile=log.txt
+LFS_TGT=$(uname -m)-lfs-linux-gnu
 rundir=$PWD
+logfile=$rundir/log.txt
+
+
+gccVer=6.3.0
+binutilsVer=2.27
+mpfrVer=3.1.5
+gmpVer=6.1.2
+mpcVer=1.0.3
+
 
 function log() {
-  echo $1 >> $rundir/$logfile
+  echo $1 >> $logfile
 }
 
 function download() {
@@ -84,7 +92,7 @@ then
 fi
 
 function BinutilsPass1() {
-  ver=2.27
+  ver=$binutilsVer
   archiveType=bz2
   program=binutils-$ver
   archive=$program.tar.$archiveType
@@ -125,16 +133,12 @@ function BinutilsPass1() {
 }
 
 function GCCPass1() {
-  ver=6.3.0
+  ver=$gccVer
   archiveType=bz2
   program=gcc-$ver
   archive=$program.tar.$archiveType
   url=http://ftp.gnu.org/gnu/gcc/gcc-$ver/$archive
   section="5.5. GCC-6.3.0 - Pass 1"
-  
-  mpfrVer=3.1.5
-  gmpVer=6.1.2
-  mpcVer=1.0.3
   
   log "$section"
   
@@ -259,8 +263,169 @@ function Glibc() {
   checkRetVal $?
   
   log "starting configure"
+  ../configure                             \
+      --prefix=/tools                    \
+      --host=$LFS_TGT                    \
+      --build=$(../scripts/config.guess) \
+      --enable-kernel=2.6.32             \
+      --with-headers=/tools/include      \
+      libc_cv_forced_unwind=yes          \
+      libc_cv_c_cleanup=yes
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+}
+
+function Libstdc() {
+  section="5.8. Libstdc++-6.3.0"
+  log "$section"
+  extract gcc-$gccVer.tar.bz2
+  cd gcc-$gccVer
+  checkRetVal $?
+  
+  mkdir -v build
+  cd build
+  
+  log "starting configure"
+  ../libstdc++-v3/configure           \
+    --host=$LFS_TGT                 \
+    --prefix=/tools                 \
+    --disable-multilib              \
+    --disable-nls                   \
+    --disable-libstdcxx-threads     \
+    --disable-libstdcxx-pch         \
+    --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/$gccVer
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+}
+
+function BinutilsPass2() {
+  ver=$binutilsVer
+  archiveType=bz2
+  program=binutils-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/binutils/$archive
+  section="5.9. Binutils-2.27 - Pass 2"
+
+  log "$section"
+
+  #download $url $archive
+  extract $archive
+  
+  cd $program
+  checkRetVal $?
+  
+  mkdir -v build
+  cd build
+  
+  CC=$LFS_TGT-gcc                \
+  AR=$LFS_TGT-ar                 \
+  RANLIB=$LFS_TGT-ranlib         \
+  ../configure                   \
+      --prefix=/tools            \
+      --disable-nls              \
+      --disable-werror           \
+      --with-lib-path=/tools/lib \
+      --with-sysroot
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  make -C ld clean
+  checkRetVal $?
+  make -C ld LIB_PATH=/usr/lib:/lib
+  checkRetVal $?
+  cp -v ld/ld-new /tools/bin
+  checkRetVal $?
+  
+  log "finished $section"
+}
+
+function GCCPass2() {
+  ver=$gccVer
+  archiveType=bz2
+  program=gcc-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gcc/gcc-$ver/$archive
+  section="5.10. GCC-6.3.0 - Pass 2"
+  
+  log "$section"
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
+  `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/include-fixed/limits.h
+  
+  for file in gcc/config/{linux,i386/linux{,64}}.h
+  do
+    cp -uv $file{,.orig}
+    sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&@g' \
+        -e 's@/usr@/tools@g' $file.orig > $file
+    echo '
+#undef STANDARD_STARTFILE_PREFIX_1
+#undef STANDARD_STARTFILE_PREFIX_2
+#define STANDARD_STARTFILE_PREFIX_1 "/tools/lib/"
+#define STANDARD_STARTFILE_PREFIX_2 ""' >> $file
+    touch $file.orig
+  done
+  
+  case $(uname -m) in
+    x86_64)
+      sed -e '/m64=/s/lib64/lib/' \
+          -i.orig gcc/config/i386/t-linux64
+    ;;
+  esac
+  
+  tar -xf ../mpfr-$mpfrVer.tar.xz
+  mv -v mpfr-$mpfrVer mpfr
+  tar -xf ../gmp-$gmpVer.tar.xz
+  mv -v gmp-$gmpVer gmp
+  tar -xf ../mpc-1.0.3.tar.gz
+  mv -v mpc-$mpcVer mpc
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
+  
+  CC=$LFS_TGT-gcc                                    \
+  CXX=$LFS_TGT-g++                                   \
+  AR=$LFS_TGT-ar                                     \
+  RANLIB=$LFS_TGT-ranlib                             \
+  ../configure                                       \
+      --prefix=/tools                                \
+      --with-local-prefix=/tools                     \
+      --with-native-system-header-dir=/tools/include \
+      --enable-languages=c,c++                       \
+      --disable-libstdcxx-pch                        \
+      --disable-multilib                             \
+      --disable-bootstrap                            \
+      --disable-libgomp
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  ln -sv gcc /tools/bin/cc
+  
+  echo 'int main(){}' > dummy.c
+  cc dummy.c
+  readelf -l a.out | grep ': /tools' > $logfile
+  rm -v dummy.c a.out
   
   
+  log "finished $section"
   
 }
 
@@ -268,5 +433,8 @@ BinutilsPass1
 GCCPass1
 LinuxApiHeaders
 Glibc
+Libstdc
+BinutilsPass2
+
 
 exit 0
