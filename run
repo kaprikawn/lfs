@@ -1,1 +1,1 @@
-sh ch5 > consoleoutput.txt 2>&1
+/bin/bash ch5 > console.txt 2>&1
