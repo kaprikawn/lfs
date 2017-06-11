@@ -1,0 +1,440 @@
+#!/bin/bash
+
+LFS=/mnt/lfs
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+rundir=$PWD
+logfile=$rundir/log.txt
+
+
+gccVer=7.1.0
+binutilsVer=2.28
+mpfrVer=3.1.5
+gmpVer=6.1.2
+mpcVer=1.0.3
+
+
+function log() {
+  echo $1 >> $logfile
+}
+
+function download() {
+  cd $LFS/sources
+  
+  if [ -e $2 ]; then
+    echo "$2 already downloaded"
+  else
+    wget $1
+  fi
+  
+  if [ ! -e $2 ]; then
+    echo "failed to download $2"
+    exit 1
+  fi
+}
+
+function extract() {
+  directory=$( sed -E "s/\.tar\.[a-z0-9]{2,3}$//" <<< $1 )
+  filename=$( basename $1 )
+  extension="${filename##*.}"
+  cd $LFS/sources
+  
+  if [ -d $directory ]; then
+    rm -rf $directory
+  fi
+  
+  echo extracting $archive
+  
+  if [ $extension == "bz2" ]; then
+    tar -xjf $archive
+  elif [ $extension == "xz" ]; then
+    tar -xJf $archive
+  fi
+  
+  if [ ! -d $directory ]; then
+    echo $archive does not appear to have unpacked
+    exit 1
+  fi
+}
+
+function checkRetVal() {
+  if [ $1 -ne 0 ]; then
+    echo "checkRetVal failed"
+    log "checkRetVal failed"
+    exit 1
+  fi
+}
+
+function callmake() {
+  log "calling make"
+  make
+  if [ $? -eq 0 ]; then
+    log "make ran successfully"
+  else
+    log "make was unsuccessful"
+    exit 1
+  fi
+}
+
+function callmakeInstall() {
+  log "calling make install"
+  make install
+  if [ $? -eq 0 ]; then
+    log "make install ran successfully"
+  else
+    log "make install was unsuccessful"
+    exit 1
+  fi
+}
+
+if [ -e $logfile ]
+then
+  rm -f $logfile
+fi
+
+function BinutilsPass1() {
+  ver=$binutilsVer
+  archiveType=bz2
+  program=binutils-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/binutils/$archive
+  section="5.4. Binutils-2.27 - Pass 1"
+
+  log "$section"
+
+  download $url $archive
+  extract $archive
+
+  cd $program
+  
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
+
+  log "starting configure"
+  ../configure --prefix=/tools          \
+             --with-sysroot=$LFS        \
+             --with-lib-path=/tools/lib \
+             --target=$LFS_TGT          \
+             --disable-nls              \
+             --disable-werror
+
+  checkRetVal $?
+
+  callmake
+
+  case $(uname -m) in
+    x86_64) mkdir -v /tools/lib && ln -sv lib /tools/lib64 ;;
+  esac
+
+  callmakeInstall
+
+  rm -rf $LFS/sources/$program
+}
+
+function GCCPass1() {
+  ver=$gccVer
+  archiveType=bz2
+  program=gcc-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gcc/gcc-$ver/$archive
+  section="5.5. GCC-6.3.0 - Pass 1"
+  
+  log "$section"
+  
+  download $url $archive
+  download http://www.mpfr.org/mpfr-$mpfrVer/mpfr-$mpfrVer.tar.xz mpfr-$mpfrVer.tar.xz
+  download http://ftp.gnu.org/gnu/gmp/gmp-$gmpVer.tar.xz gmp-$gmpVer.tar.xz
+  download http://www.multiprecision.org/mpc/download/mpc-$mpcVer.tar.gz mpc-$mpcVer.tar.gz
+  
+  extract $archive
+  
+  cd $LFS/sources/$program
+  
+  tar -xf ../mpfr-$mpfrVer.tar.xz
+  mv -v mpfr-$mpfrVer mpfr
+  tar -xf ../gmp-$gmpVer.tar.xz
+  mv -v gmp-$gmpVer gmp
+  tar -xf ../mpc-1.0.3.tar.gz
+  mv -v mpc-$mpcVer mpc
+  
+  for file in gcc/config/{linux,i386/linux{,64}}.h
+  do
+    cp -uv $file{,.orig}
+    sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&@g' \
+        -e 's@/usr@/tools@g' $file.orig > $file
+    echo '
+#undef STANDARD_STARTFILE_PREFIX_1
+#undef STANDARD_STARTFILE_PREFIX_2
+#define STANDARD_STARTFILE_PREFIX_1 "/tools/lib/"
+#define STANDARD_STARTFILE_PREFIX_2 ""' >> $file
+    touch $file.orig
+  done
+  
+  case $(uname -m) in
+    x86_64)
+      sed -e '/m64=/s/lib64/lib/' \
+          -i.orig gcc/config/i386/t-linux64
+   ;;
+  esac
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
+
+  log "starting configure"
+  ../configure                                       \
+    --target=$LFS_TGT                              \
+    --prefix=/tools                                \
+    --with-glibc-version=2.11                      \
+    --with-sysroot=$LFS                            \
+    --with-newlib                                  \
+    --without-headers                              \
+    --with-local-prefix=/tools                     \
+    --with-native-system-header-dir=/tools/include \
+    --disable-nls                                  \
+    --disable-shared                               \
+    --disable-multilib                             \
+    --disable-decimal-float                        \
+    --disable-threads                              \
+    --disable-libatomic                            \
+    --disable-libgomp                              \
+    --disable-libmpx                               \
+    --disable-libquadmath                          \
+    --disable-libssp                               \
+    --disable-libvtv                               \
+    --disable-libstdcxx                            \
+    --enable-languages=c,c++
+  checkRetVal $?
+  
+  callmake
+  
+  callmakeInstall
+
+  rm -rf $LFS/sources/$program
+}
+
+function LinuxApiHeaders() {
+  ver=4.11.4
+  archiveType=xz
+  program=linux-$ver
+  archive=$program.tar.$archiveType
+  url=https://www.kernel.org/pub/linux/kernel/v4.x/$archive
+  section="5.6. Linux-4.9.9 API Headers"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  
+  cd $program
+  checkRetVal $?
+  
+  make mrproper
+  checkRetVal $?
+  
+  make INSTALL_HDR_PATH=dest headers_install
+  checkRetVal $?
+  cp -rv dest/include/* /tools/include
+  checkRetVal $?
+  
+  
+}
+
+function Glibc() {
+  ver=2.25
+  archiveType=xz
+  program=linux-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/glibc/$archive
+  section="5.7. Glibc-2.25"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
+  
+  log "starting configure"
+  ../configure                             \
+      --prefix=/tools                    \
+      --host=$LFS_TGT                    \
+      --build=$(../scripts/config.guess) \
+      --enable-kernel=2.6.32             \
+      --with-headers=/tools/include      \
+      libc_cv_forced_unwind=yes          \
+      libc_cv_c_cleanup=yes
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+}
+
+function Libstdc() {
+  section="5.8. Libstdc++-6.3.0"
+  log "$section"
+  extract gcc-$gccVer.tar.bz2
+  cd gcc-$gccVer
+  checkRetVal $?
+  
+  mkdir -v build
+  cd build
+  
+  log "starting configure"
+  ../libstdc++-v3/configure           \
+    --host=$LFS_TGT                 \
+    --prefix=/tools                 \
+    --disable-multilib              \
+    --disable-nls                   \
+    --disable-libstdcxx-threads     \
+    --disable-libstdcxx-pch         \
+    --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/$gccVer
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+}
+
+function BinutilsPass2() {
+  ver=$binutilsVer
+  archiveType=bz2
+  program=binutils-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/binutils/$archive
+  section="5.9. Binutils-2.27 - Pass 2"
+
+  log "$section"
+
+  #download $url $archive
+  extract $archive
+  
+  cd $program
+  checkRetVal $?
+  
+  mkdir -v build
+  cd build
+  
+  CC=$LFS_TGT-gcc                \
+  AR=$LFS_TGT-ar                 \
+  RANLIB=$LFS_TGT-ranlib         \
+  ../configure                   \
+      --prefix=/tools            \
+      --disable-nls              \
+      --disable-werror           \
+      --with-lib-path=/tools/lib \
+      --with-sysroot
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  make -C ld clean
+  checkRetVal $?
+  make -C ld LIB_PATH=/usr/lib:/lib
+  checkRetVal $?
+  cp -v ld/ld-new /tools/bin
+  checkRetVal $?
+  
+  log "finished $section"
+}
+
+function GCCPass2() {
+  ver=$gccVer
+  archiveType=bz2
+  program=gcc-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gcc/gcc-$ver/$archive
+  section="5.10. GCC-6.3.0 - Pass 2"
+  
+  log "$section"
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  cat gcc/limitx.h gcc/glimits.h gcc/limity.h > \
+  `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/include-fixed/limits.h
+  
+  for file in gcc/config/{linux,i386/linux{,64}}.h
+  do
+    cp -uv $file{,.orig}
+    sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&@g' \
+        -e 's@/usr@/tools@g' $file.orig > $file
+    echo '
+#undef STANDARD_STARTFILE_PREFIX_1
+#undef STANDARD_STARTFILE_PREFIX_2
+#define STANDARD_STARTFILE_PREFIX_1 "/tools/lib/"
+#define STANDARD_STARTFILE_PREFIX_2 ""' >> $file
+    touch $file.orig
+  done
+  
+  case $(uname -m) in
+    x86_64)
+      sed -e '/m64=/s/lib64/lib/' \
+          -i.orig gcc/config/i386/t-linux64
+    ;;
+  esac
+  
+  tar -xf ../mpfr-$mpfrVer.tar.xz
+  mv -v mpfr-$mpfrVer mpfr
+  tar -xf ../gmp-$gmpVer.tar.xz
+  mv -v gmp-$gmpVer gmp
+  tar -xf ../mpc-1.0.3.tar.gz
+  mv -v mpc-$mpcVer mpc
+  
+  mkdir -v build
+  cd build
+  checkRetVal $?
+  
+  CC=$LFS_TGT-gcc                                    \
+  CXX=$LFS_TGT-g++                                   \
+  AR=$LFS_TGT-ar                                     \
+  RANLIB=$LFS_TGT-ranlib                             \
+  ../configure                                       \
+      --prefix=/tools                                \
+      --with-local-prefix=/tools                     \
+      --with-native-system-header-dir=/tools/include \
+      --enable-languages=c,c++                       \
+      --disable-libstdcxx-pch                        \
+      --disable-multilib                             \
+      --disable-bootstrap                            \
+      --disable-libgomp
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  ln -sv gcc /tools/bin/cc
+  
+  echo 'int main(){}' > dummy.c
+  cc dummy.c
+  readelf -l a.out | grep ': /tools' > $logfile
+  rm -v dummy.c a.out
+  
+  
+  log "finished $section"
+  
+}
+
+BinutilsPass1
+GCCPass1
+LinuxApiHeaders
+Glibc
+Libstdc
+BinutilsPass2
+GCCPass2
+
+exit 0
