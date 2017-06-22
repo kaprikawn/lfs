@@ -12,6 +12,10 @@ mpfrVer=3.1.5
 gmpVer=6.1.2
 mpcVer=1.0.3
 
+function getDirectory() {
+  program=$1
+  
+}
 
 function log() {
   echo $1 >> $logfile
@@ -430,6 +434,46 @@ function GCCPass2() {
   
 }
 
+function TclCore() {
+  ver=8.6.6
+  archiveType=gz
+  program=tcl$ver
+  archive=tcl-core$ver-src.tar.gz
+  url=http://sourceforge.net/projects/tcl/files/Tcl/$ver/$archive
+  section="5.9. Binutils-2.27 - Pass 2"
+
+  log "$section"
+  
+  download $url $archive
+  
+  cd $LFS/sources
+  tar -xf $archive
+  checkRetVal $?
+  
+  cd tcl$ver
+  checkRetVal $?
+  
+  cd unix
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  chmod -v u+w /tools/lib/libtcl8.6.so
+  checkRetVal $?
+  
+  make install-private-headers
+  checkRetVal $?
+  
+  ln -sv tclsh8.6 /tools/bin/tclsh
+  
+}
+
 BinutilsPass1
 GCCPass1
 LinuxApiHeaders
@@ -437,5 +481,6 @@ Glibc
 Libstdc
 BinutilsPass2
 GCCPass2
+TclCore
 
 exit 0
