@@ -474,13 +474,13 @@ function TclCore() {
   
 }
 
-BinutilsPass1
-GCCPass1
-LinuxApiHeaders
-Glibc
-Libstdc
-BinutilsPass2
-GCCPass2
+#BinutilsPass1
+#GCCPass1
+#LinuxApiHeaders
+#Glibc
+#Libstdc
+#BinutilsPass2
+#GCCPass2
 TclCore
 
 exit 0
