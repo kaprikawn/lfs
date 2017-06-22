@@ -994,7 +994,7 @@ function Perl() {
   archiveType=bz2
   program=perl-$ver
   archive=$program.tar.$archiveType
-  url=http://www.cpan.org/src/5.0/perl-5.24.1.tar.bz2
+  url=http://www.cpan.org/src/5.0/$archive
   section="5.30. Perl-5.24.1"
   
   log "$section"
@@ -1006,7 +1006,7 @@ function Perl() {
   checkRetVal $?
   
   log "starting configure"
-  sh Configure -des -Dprefix=/tools -Dlibs=-lmsh Configure -des -Dprefix=/tools -Dlibs=-lm
+  ./Configure -des -Dprefix=/tools -Dlibs=-lmsh Configure -des -Dprefix=/tools -Dlibs=-lm
   checkRetVal $?
   
   callMake
@@ -1038,14 +1038,14 @@ function Perl() {
 #Bzip2
 #Coreutils
 #Diffutils
-File
-Gawk
-Gettext
-Grep
-Gzip
-M4
-Make
-Patch
+#File
+#Gawk
+#Gettext
+#Grep
+#Gzip
+#M4
+#Make
+#Patch
 Perl
 
 exit 0
