@@ -480,7 +480,7 @@ function Expect() {
   archiveType=gz
   program=expect$ver
   archive=expect5.45.tar.gz
-  url=http://prdownloads.sourceforge.net/expect/expect5.45.tar.gz/$archive
+  url=http://prdownloads.sourceforge.net/expect/$archive
   section="5.12. Expect-5.45"
 
   log "$section"
