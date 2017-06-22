@@ -1006,7 +1006,7 @@ function Perl() {
   checkRetVal $?
   
   log "starting configure"
-  ./Configure -des -Dprefix=/tools -Dlibs=-lmsh Configure -des -Dprefix=/tools -Dlibs=-lm
+  sh Configure -des -Dprefix=/tools -Dlibs=-lm
   checkRetVal $?
   
   callMake
