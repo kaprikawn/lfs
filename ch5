@@ -42,16 +42,12 @@ function extract() {
     rm -rf $directory
   fi
   
-  echo extracting $archive
+  log "extracting $archive into $directory"
   
-  if [ $extension == "bz2" ]; then
-    tar -xjf $archive
-  else
-    tar xf $archive
-  fi
-  log "checking $directory exists"
+  tar -xf $archive
+  
   if [ ! -d $directory ]; then
-    log "$archive does not appear to have unpacked"
+    log "$archive does not appear to have unpacked into $directory"
     exit 1
   fi
 }
@@ -64,7 +60,7 @@ function checkRetVal() {
   fi
 }
 
-function callmake() {
+function callMake() {
   log "calling make"
   make
   if [ $? -eq 0 ]; then
@@ -75,7 +71,7 @@ function callmake() {
   fi
 }
 
-function callmakeInstall() {
+function callMakeInstall() {
   log "calling make install"
   make install
   if [ $? -eq 0 ]; then
@@ -121,13 +117,13 @@ function BinutilsPass1() {
 
   checkRetVal $?
 
-  callmake
+  callMake
 
   case $(uname -m) in
     x86_64) mkdir -v /tools/lib && ln -sv lib /tools/lib64 ;;
   esac
 
-  callmakeInstall
+  callMakeInstall
 
   rm -rf $LFS/sources/$program
 }
@@ -207,9 +203,9 @@ function GCCPass1() {
     --enable-languages=c,c++
   checkRetVal $?
   
-  callmake
+  callMake
   
-  callmakeInstall
+  callMakeInstall
 
   rm -rf $LFS/sources/$program
 }
@@ -272,6 +268,8 @@ function Glibc() {
       libc_cv_forced_unwind=yes          \
       libc_cv_c_cleanup=yes
   checkRetVal $?
+  
+  log "configure finished"
   
   callMake
   
@@ -430,9 +428,9 @@ function GCCPass2() {
   
 }
 
-#BinutilsPass1
-#GCCPass1
-#LinuxApiHeaders
+BinutilsPass1
+GCCPass1
+LinuxApiHeaders
 Glibc
 Libstdc
 BinutilsPass2
