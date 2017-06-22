@@ -652,7 +652,371 @@ function Bison() {
   
   callMakeInstall
   
-  ln -sv bash /tools/bin/sh
+  log "finished $section"
+}
+
+function Bzip2() {
+  ver=1.0.6
+  archiveType=gz
+  program=bzip2-$ver
+  archive=$program.tar.$archiveType
+  url=http://www.bzip.org/$ver/$archive
+  section="5.18. Bzip2-1.0.6"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  callMake
+  
+  make PREFIX=/tools install
+  checkRetVal $?
+  
+  log "finished $section"
+}
+
+function Coreutils() {
+  ver=8.26
+  archiveType=xz
+  program=coreutils-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/coreutils/$archive
+  section="5.19. Coreutils-8.26"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools --enable-install-program=hostname
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Diffutils() {
+  ver=3.5
+  archiveType=xz
+  program=diffutils-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/diffutils/$archive
+  section="5.20. Diffutils-3.5"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function File() {
+  ver=5.30
+  archiveType=xz
+  program=file-$ver
+  archive=$program.tar.$archiveType
+  url=ftp://ftp.astron.com/pub/file/$archive
+  section="5.21. File-5.30"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Findutils() {
+  ver=4.6.0
+  archiveType=gz
+  program=findutils-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/findutils/$archive
+  section="5.22. Findutils-4.6.0"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Gawk() {
+  ver=4.1.4
+  archiveType=gz
+  program=gawk-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gawk/$archive
+  section="5.23. Gawk-4.1.4"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Gettext() {
+  ver=0.19.8.1
+  archiveType=xz
+  program=gettext-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gettext/$archive
+  section="5.24. Gettext-0.19.8.1"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  cd gettext-tools
+  checkRetVal $?
+  
+  log "starting configure"
+  EMACS="no" ./configure --prefix=/tools --disable-shared
+  checkRetVal $?
+  
+  make -C gnulib-lib
+  checkRetVal $?
+  make -C intl pluralx.c
+  checkRetVal $?
+  make -C src msgfmt
+  checkRetVal $?
+  make -C src msgmerge
+  checkRetVal $?
+  make -C src xgettext
+  checkRetVal $?
+  
+  cp -v src/{msgfmt,msgmerge,xgettext} /tools/bin
+  checkRetVal $?
+  
+  log "finished $section"
+}
+
+function Grep() {
+  ver=3.0
+  archiveType=xz
+  program=grep-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/grep/$archive
+  section="5.25. Grep-3.0"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Gzip() {
+  ver=1.8
+  archiveType=xz
+  program=gzip-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/gzip/$archive
+  section="5.26. Gzip-1.8"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function M4() {
+  ver=1.4.18
+  archiveType=xz
+  program=m4-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/m4/$archive
+  section="5.27. M4-1.4.18"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Make() {
+  ver=4.2.1
+  archiveType=bz2
+  program=make-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/make/$archive
+  section="5.28. Make-4.2.1"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools --without-guile
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Patch() {
+  ver=2.7.5
+  archiveType=xz
+  program=patch-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/patch/$archive
+  section="5.29. Patch-2.7.5"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Perl() {
+  ver=5.24.1
+  archiveType=bz2
+  program=perl-$ver
+  archive=$program.tar.$archiveType
+  url=http://www.cpan.org/src/5.0/perl-5.24.1.tar.bz2
+  section="5.30. Perl-5.24.1"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  sh Configure -des -Dprefix=/tools -Dlibs=-lmsh Configure -des -Dprefix=/tools -Dlibs=-lm
+  checkRetVal $?
+  
+  callMake
+  
+  cp -v perl cpan/podlators/scripts/pod2man /tools/bin
+  checkRetVal $?
+  mkdir -pv /tools/lib/perl5/$ver
+  checkRetVal $?
+  cp -Rv lib/* /tools/lib/perl5/$ver
+  checkRetVal $?
   
   log "finished $section"
 }
@@ -665,11 +1029,23 @@ function Bison() {
 #BinutilsPass2
 #GCCPass2
 #TclCore
-Expect
-DejaGNU
-Check
-Ncurses
-Bash
-Bison
+#Expect
+#DejaGNU
+#Check
+#Ncurses
+#Bash
+#Bison
+Bzip2
+Coreutils
+Diffutils
+File
+Gawk
+Gettext
+Grep
+Gzip
+M4
+Make
+Patch
+Perl
 
 exit 0
