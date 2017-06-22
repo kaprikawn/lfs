@@ -46,12 +46,12 @@ function extract() {
   
   if [ $extension == "bz2" ]; then
     tar -xjf $archive
-  elif [ $extension == "xz" ]; then
-    tar -xJf $archive
+  else
+    tar xf $archive
   fi
-  
+  log "checking $directory exists"
   if [ ! -d $directory ]; then
-    echo $archive does not appear to have unpacked
+    log "$archive does not appear to have unpacked"
     exit 1
   fi
 }
@@ -245,7 +245,7 @@ function LinuxApiHeaders() {
 function Glibc() {
   ver=2.25
   archiveType=xz
-  program=linux-$ver
+  program=glibc-$ver
   archive=$program.tar.$archiveType
   url=http://ftp.gnu.org/gnu/glibc/$archive
   section="5.7. Glibc-2.25"
@@ -276,7 +276,8 @@ function Glibc() {
   callMake
   
   callMakeInstall
-  
+
+  log "glibc finished"
 }
 
 function Libstdc() {
@@ -429,9 +430,9 @@ function GCCPass2() {
   
 }
 
-BinutilsPass1
-GCCPass1
-LinuxApiHeaders
+#BinutilsPass1
+#GCCPass1
+#LinuxApiHeaders
 Glibc
 Libstdc
 BinutilsPass2
