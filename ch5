@@ -735,7 +735,7 @@ function Diffutils() {
 
 function File() {
   ver=5.30
-  archiveType=xz
+  archiveType=gz
   program=file-$ver
   archive=$program.tar.$archiveType
   url=ftp://ftp.astron.com/pub/file/$archive
@@ -1035,9 +1035,9 @@ function Perl() {
 #Ncurses
 #Bash
 #Bison
-Bzip2
-Coreutils
-Diffutils
+#Bzip2
+#Coreutils
+#Diffutils
 File
 Gawk
 Gettext
