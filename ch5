@@ -440,7 +440,7 @@ function TclCore() {
   program=tcl$ver
   archive=tcl-core$ver-src.tar.gz
   url=http://sourceforge.net/projects/tcl/files/Tcl/$ver/$archive
-  section="5.9. Binutils-2.27 - Pass 2"
+  section="5.11. Tcl-core-8.6.6"
 
   log "$section"
   
@@ -472,6 +472,189 @@ function TclCore() {
   
   ln -sv tclsh8.6 /tools/bin/tclsh
   
+  log "finished $section"
+}
+
+function Expect() {
+  ver=5.45
+  archiveType=gz
+  program=expect$ver
+  archive=expect5.45.tar.gz
+  url=http://prdownloads.sourceforge.net/expect/expect5.45.tar.gz/$archive
+  section="5.12. Expect-5.45"
+
+  log "$section"
+  
+  download $url $archive
+  
+  cd $LFS/sources
+  tar -xf $archive
+  checkRetVal $?
+  
+  cd expect$ver
+  checkRetVal $?
+  
+  cp -v configure{,.orig}
+  sed 's:/usr/local/bin:/bin:' configure.orig > configure
+  
+  log "starting configure"
+  ./configure --prefix=/tools       \
+              --with-tcl=/tools/lib \
+              --with-tclinclude=/tools/include
+  checkRetVal $?
+  
+  callMake
+  
+  make SCRIPTS="" install
+  checkRetVal $?
+  
+  log "finished $section"
+}
+
+function DejaGNU() {
+  ver=1.6
+  archiveType=gz
+  program=dejagnu-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/dejagnu/$archive
+  section="5.13. DejaGNU-1.6"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Check() {
+  ver=0.11.0
+  archiveType=gz
+  program=check-$ver
+  archive=$program.tar.$archiveType
+  url=https://github.com/libcheck/check/releases/download/$ver/$archive
+  section="5.14. Check-0.11.0"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  PKG_CONFIG= ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Ncurses() {
+  ver=6.0
+  archiveType=gz
+  program=ncurses-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu//ncurses/$archive
+  section="5.15. Ncurses-6.0"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  sed -i s/mawk// configure
+  
+  log "starting configure"
+  ./configure --prefix=/tools \
+            --with-shared   \
+            --without-debug \
+            --without-ada   \
+            --enable-widec  \
+            --enable-overwrite
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Bash() {
+  ver=4.4
+  archiveType=gz
+  program=bash-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/bash/$archive
+  section="5.16. Bash-4.4"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools --without-bash-malloc
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  ln -sv bash /tools/bin/sh
+  
+  log "finished $section"
+}
+
+function Bison() {
+  ver=3.0.4
+  archiveType=xz
+  program=bison-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/bison/$archive
+  section="5.17. Bison-3.0.4"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  ln -sv bash /tools/bin/sh
+  
+  log "finished $section"
 }
 
 #BinutilsPass1
@@ -481,6 +664,12 @@ function TclCore() {
 #Libstdc
 #BinutilsPass2
 #GCCPass2
-TclCore
+#TclCore
+Expect
+DejaGNU
+Check
+Ncurses
+Bash
+Bison
 
 exit 0
