@@ -422,7 +422,7 @@ function GCCPass2() {
   
   echo 'int main(){}' > dummy.c
   cc dummy.c
-  readelf -l a.out | grep ': /tools' > $logfile
+  readelf -l a.out | grep ': /tools' >> $logfile
   rm -v dummy.c a.out
   
   
@@ -430,10 +430,10 @@ function GCCPass2() {
   
 }
 
-#BinutilsPass1
-#GCCPass1
-#LinuxApiHeaders
-#Glibc
+BinutilsPass1
+GCCPass1
+LinuxApiHeaders
+Glibc
 Libstdc
 BinutilsPass2
 GCCPass2
