@@ -1167,13 +1167,13 @@ function Stipping() {
   log "$section"
   
   strip --strip-debug /tools/lib/*
-  checkRetVal $?
+  #checkRetVal $?
   
   /usr/bin/strip --strip-unneeded /tools/{,s}bin/*
-  checkRetVal $?
+  #checkRetVal $?
   
   rm -rf /tools/{,share}/{info,man,doc}
-  checkRetVal $?
+  #checkRetVal $?
   
   log "finished $section"
 }
@@ -1208,8 +1208,8 @@ function Stipping() {
 #Tar
 #Texinfo
 #UtilLinux
-Xz
-Stipping
+#Xz
+#Stipping
 
 log "changing ownership of $LFS/tools to root"
 chown -R root:root $LFS/tools
