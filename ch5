@@ -1139,7 +1139,7 @@ function Xz() {
   archiveType=xz
   program=xz-$ver
   archive=$program.tar.$archiveType
-  url=http://tukaani.org/xz/$ver.tar.xz
+  url=http://tukaani.org/xz/xz-$ver.tar.xz
   section="5.35. Xz-5.2.3"
   
   log "$section"
@@ -1178,36 +1178,36 @@ function Stipping() {
   log "finished $section"
 }
 
-BinutilsPass1
-GCCPass1
-LinuxApiHeaders
-Glibc
-Libstdc
-BinutilsPass2
-GCCPass2
-TclCore
-Expect
-DejaGNU
-Check
-Ncurses
-Bash
-Bison
-Bzip2
-Coreutils
-Diffutils
-File
-Gawk
-Gettext
-Grep
-Gzip
-M4
-Make
-Patch
-Perl
-Sed
-Tar
-Texinfo
-UtilLinux
+#BinutilsPass1
+#GCCPass1
+#LinuxApiHeaders
+#Glibc
+#Libstdc
+#BinutilsPass2
+#GCCPass2
+#TclCore
+#Expect
+#DejaGNU
+#Check
+#Ncurses
+#Bash
+#Bison
+#Bzip2
+#Coreutils
+#Diffutils
+#File
+#Gawk
+#Gettext
+#Grep
+#Gzip
+#M4
+#Make
+#Patch
+#Perl
+#Sed
+#Tar
+#Texinfo
+#UtilLinux
 Xz
 Stipping
 
