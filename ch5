@@ -64,6 +64,7 @@ function checkRetVal() {
     log "checkRetVal failed"
     exit 1
   fi
+  log "retVal check ok"
 }
 
 function callMake() {
@@ -1021,31 +1022,197 @@ function Perl() {
   log "finished $section"
 }
 
-#BinutilsPass1
-#GCCPass1
-#LinuxApiHeaders
-#Glibc
-#Libstdc
-#BinutilsPass2
-#GCCPass2
-#TclCore
-#Expect
-#DejaGNU
-#Check
-#Ncurses
-#Bash
-#Bison
-#Bzip2
-#Coreutils
-#Diffutils
-#File
-#Gawk
-#Gettext
-#Grep
-#Gzip
-#M4
-#Make
-#Patch
+function Sed() {
+  ver=4.4
+  archiveType=xz
+  program=sed-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/sed/sed-$ver.tar.xz
+  section="5.31. Sed-4.4"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Tar() {
+  ver=1.29
+  archiveType=xz
+  program=tar-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/tar/tar-$ver.tar.xz
+  section="5.32. Tar-1.29"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Texinfo() {
+  ver=6.3
+  archiveType=xz
+  program=texinfo-$ver
+  archive=$program.tar.$archiveType
+  url=http://ftp.gnu.org/gnu/texinfo/texinfo-$ver.tar.xz
+  section="5.33. Texinfo-6.3"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function UtilLinux() {
+  ver=2.29.1
+  archiveType=xz
+  program=util-linux-$ver
+  archive=$program.tar.$archiveType
+  url=https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-$ver.tar.xz
+  section="5.34. Util-linux-2.29.1"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools                \
+              --without-python               \
+              --disable-makeinstall-chown    \
+              --without-systemdsystemunitdir \
+              PKG_CONFIG=""
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Xz() {
+  ver=5.2.3
+  archiveType=xz
+  program=xz-$ver
+  archive=$program.tar.$archiveType
+  url=http://tukaani.org/xz/$ver.tar.xz
+  section="5.35. Xz-5.2.3"
+  
+  log "$section"
+  
+  download $url $archive
+  
+  extract $archive
+  cd $program
+  checkRetVal $?
+  
+  log "starting configure"
+  ./configure --prefix=/tools
+  checkRetVal $?
+  
+  callMake
+  
+  callMakeInstall
+  
+  log "finished $section"
+}
+
+function Stipping() {
+  section="5.36. Stripping"
+  
+  log "$section"
+  
+  strip --strip-debug /tools/lib/*
+  checkRetVal $?
+  
+  /usr/bin/strip --strip-unneeded /tools/{,s}bin/*
+  checkRetVal $?
+  
+  rm -rf /tools/{,share}/{info,man,doc}
+  checkRetVal $?
+  
+  log "finished $section"
+}
+
+BinutilsPass1
+GCCPass1
+LinuxApiHeaders
+Glibc
+Libstdc
+BinutilsPass2
+GCCPass2
+TclCore
+Expect
+DejaGNU
+Check
+Ncurses
+Bash
+Bison
+Bzip2
+Coreutils
+Diffutils
+File
+Gawk
+Gettext
+Grep
+Gzip
+M4
+Make
+Patch
 Perl
+Sed
+Tar
+Texinfo
+UtilLinux
+Xz
+Stipping
+
+log "changing ownership of $LFS/tools to root"
+chown -R root:root $LFS/tools
+checkRetVal $?
 
 exit 0
