@@ -1202,7 +1202,7 @@ function DownloadCh6Packages() {
   download https://www.kernel.org/pub/linux/utils/kbd/kbd-2.0.4.tar.xz kbd-2.0.4.tar.xz
   download https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-23.tar.xz kmod-23.tar.xz
   download http://www.greenwoodsoftware.com/less/less-481.tar.gz less-481.tar.gz
-  download http://www.linuxfromscratch.org/lfs/downloads/8.0/lfs-bootscripts-20150222.tar.bz2 lfs-bootscripts-20150222.tar.bz2
+  #download http://www.linuxfromscratch.org/lfs/downloads/8.0/lfs-bootscripts-20150222.tar.bz2 lfs-bootscripts-20150222.tar.bz2
   download https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.25.tar.xz libcap-2.25.tar.xz
   download http://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.4.1.tar.gz libpipeline-1.4.1.tar.gz
   download http://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz libtool-2.4.6.tar.xz
