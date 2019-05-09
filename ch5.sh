@@ -55,5 +55,7 @@ function BinutilsPass1() {
   rm -rf $LFS/sources/$program
 }
 
+BinutilsPass1
+
 exit 0
 
