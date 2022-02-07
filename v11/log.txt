@@ -1,0 +1,8 @@
+14:56:25 5.2. Binutils-2.37 - Pass 1 5.2. Binutils-2.37 - Pass 1
+14:56:25 5.2. Binutils-2.37 - Pass 1 extracting binutils-2.37.tar.xz into binutils-2.37
+14:56:27 5.2. Binutils-2.37 - Pass 1 starting configure
+14:56:28 5.2. Binutils-2.37 - Pass 1 retVal check ok
+14:56:28 5.2. Binutils-2.37 - Pass 1 calling make
+14:58:09 5.2. Binutils-2.37 - Pass 1 make ran successfully
+14:58:09 5.2. Binutils-2.37 - Pass 1 calling make install
+14:58:11 5.2. Binutils-2.37 - Pass 1 make install ran successfully
