@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# https://www.linuxfromscratch.org/lfs/view/stable/
+
 # set -x
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
@@ -260,6 +262,8 @@ esac
   fi
   rm -v a.out
   
+  cd $LFS/sources
+  rm -rf $directory
 }
 
 function Libstdc() {
@@ -298,6 +302,8 @@ function Libstdc() {
   rm -v $LFS/usr/lib/lib{stdc++,stdc++fs,supc++}.la
   CheckRetVal $?
   
+  cd $LFS/sources
+  rm -rf $directory
 }
 
 # InitialChecks
@@ -305,8 +311,6 @@ function Libstdc() {
 # GccPass1
 # LinuxApiHeaders
 # Glibc
-Libstdc
+# Libstdc
 
 exit 0
-
-# https://www.linuxfromscratch.org/lfs/view/stable/
